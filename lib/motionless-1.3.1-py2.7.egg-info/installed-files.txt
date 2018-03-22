@@ -1,0 +1,11 @@
+..\setup.py
+..\motionless.py
+..\gpolyencode.py
+..\setup.pyc
+..\motionless.pyc
+..\gpolyencode.pyc
+dependency_links.txt
+PKG-INFO
+requires.txt
+SOURCES.txt
+top_level.txt
