@@ -50,52 +50,54 @@ class NoWasterView(generic.View):
 
     # Post function to handle Facebook messages
     def post(self, request, *args, **kwargs):
-        # Converts the text payload into a python dictionary
         incoming_message = ujson.loads(self.request.body.decode('utf-8'))
-        # if getSenderMessage(incoming_message) != None:
-        message = getSenderMessage(incoming_message) 
-        if message != None:
-            senderID = message['sender']['id']
-            messageTypeContent = returnMessageTypeAndContent(message)
-            if messageTypeContent != None:
-                if users.has_key(senderID):
-                    stage = users[senderID]["stage"]
-                else:
-                    stage = 0
-                    users[senderID] = {}
-                    users[senderID]["stage"] = stage
-                    users[senderID]["originLoc"] = {}
-                    users[senderID]["destLoc"] = {}
-                if stage == 0:
-                    postSendLocationQuickReply(senderID, "Trimite-mi locatia ta")
-                    stage = 1
-                    users[senderID]["stage"] = stage
-                elif stage == 1:
-                    loc = getGeocodeAndText(messageTypeContent["content"])
-                    if loc == None:
-                        postSendLocationQuickReply(senderID, "locatia nu e valida, mai incearca o data") 
-                    else:
-                        users[senderID]["originLoc"] = loc
-                        users[senderID]["stage"] = 2
-                        postSendLocationQuickReply(senderID, "Trimite locatia unde vrei sa ajungi") 
-                elif stage == 2:
-                    loc = getGeocodeAndText(messageTypeContent["content"])
-                    if loc == None:
-                        postSendLocationQuickReply(senderID, "locatia nu e valida, mai incearca o data") 
-                    else:
-                        users[senderID]["destLoc"] = loc
-                        walkingParameters = getWalkingParameters(getRouteRaw(users[senderID]["originLoc"]["geocode"], users[senderID]["destLoc"]["geocode"], "walking"))
-                        if walkingParameters != None:
-                            postFacebookMessage(senderID, walkingParameters["distance"] + " " + walkingParameters["duration"])
-                            postFacebookMessage(senderID, str(weatherCondition))
-                            try:
-                                postFacebookImageFromUrl(senderID, pictureUrlForRoute(users[senderID]["originLoc"]["text"],users[senderID]["destLoc"]["text"], walkingParameters["polyline"]))
-                            except:
-                                print("what th efuck")
-                            #este o eroare pe librarie de static maps(motionless) cand face quote ar trebui sa face quote(*string*.encode('utf-8))
-                            # print ("Error:",e)
-                        else: 
-                            postFacebookMessage(senderID, "Nu prea merge cu locatiile astea")
-                        postFacebookMessage(senderID,"Acum daca vei scrie ceva vei incepe procesul din nou")
-                        users[senderID]["stage"] = 0
+        # print (incoming_message["entry"][0]["messaging"][0]["message"]["nlp"]) 
+        handleMessage(incoming_message)
         return HttpResponse()
+
+def handleMessage(incoming_message):
+    message = getSenderMessage(incoming_message) 
+    if message != None:
+        senderID = message['sender']['id']
+        messageTypeContent = returnMessageTypeAndContent(message)
+        if messageTypeContent != None:
+            if users.has_key(senderID):
+                stage = users[senderID]["stage"]
+            else:
+                stage = 0
+                users[senderID] = {}
+                users[senderID]["stage"] = stage
+                users[senderID]["originLoc"] = {}
+                users[senderID]["destLoc"] = {}
+            if stage == 0:
+                postSendLocationQuickReply(senderID, "Trimite-mi locatia ta")
+                stage = 1
+                users[senderID]["stage"] = stage
+            elif stage == 1:
+                loc = getGeocodeAndText(messageTypeContent["content"])
+                if loc == None:
+                    postSendLocationQuickReply(senderID, "locatia nu e valida, mai incearca o data") 
+                else:
+                    users[senderID]["originLoc"] = loc
+                    users[senderID]["stage"] = 2
+                    postSendLocationQuickReply(senderID, "Trimite locatia unde vrei sa ajungi") 
+            elif stage == 2:
+                loc = getGeocodeAndText(messageTypeContent["content"])
+                if loc == None:
+                    postSendLocationQuickReply(senderID, "locatia nu e valida, mai incearca o data") 
+                else:
+                    users[senderID]["destLoc"] = loc
+                    walkingParameters = getWalkingParameters(getRouteRaw(users[senderID]["originLoc"]["geocode"], users[senderID]["destLoc"]["geocode"], "walking"))
+                    if walkingParameters != None:
+                        postFacebookMessage(senderID, walkingParameters["distance"] + " " + walkingParameters["duration"])
+                        postFacebookMessage(senderID, str(weatherCondition))
+                        try:
+                            postFacebookImageFromUrl(senderID, pictureUrlForRoute(users[senderID]["originLoc"]["text"],users[senderID]["destLoc"]["text"], walkingParameters["polyline"]))
+                        except:
+                            print(pictureUrlForRoute(users[senderID]["originLoc"]["text"],users[senderID]["destLoc"]["text"], walkingParameters["polyline"]))
+                        #este o eroare pe librarie de static maps(motionless) cand face quote ar trebui sa face quote(*string*.encode('utf-8))
+                        # print ("Error:",e)
+                    else: 
+                        postFacebookMessage(senderID, "Nu prea merge cu locatiile astea")
+                    postFacebookMessage(senderID,"Acum daca vei scrie ceva vei incepe procesul din nou")
+                    users[senderID]["stage"] = 0    
