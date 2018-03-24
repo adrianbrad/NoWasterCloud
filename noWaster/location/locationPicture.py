@@ -1,10 +1,10 @@
 
-from motionless import DecoratedMap, AddressMarker
+from motionless import DecoratedMap, LatLonMarker
 
 def handlePictureUrl(url, newEncodedPolyline):
     return url.replace("sgl%7CGqaxnC_xA_%60H", newEncodedPolyline.replace("\\\\","\\"))
 
-def pictureUrlForRoute(origin, destination, polyLine):
+def pictureUrlForRoute(polyLine, markerList):
     road_styles = [{
         'feature': 'road.highway',
         'element': 'geomoetry',
@@ -20,8 +20,13 @@ def pictureUrlForRoute(origin, destination, polyLine):
         }
     }]
     dmap = DecoratedMap(style=road_styles)
-    dmap.add_marker(AddressMarker(origin,label='A'))
-    dmap.add_marker(AddressMarker(destination,label='B'))
+    for point in markerList:
+        if(len(point) == 3):
+            dmap.add_marker(LatLonMarker(point[0], point[1],label='A', icon_url = "http:" + str(point[2])))
+        else:
+            dmap.add_marker(LatLonMarker(point[0], point[1],label='A'))
+    # dmap.add_marker(LatLonMarker(origin[0], origin[1],label='A'))
+    # dmap.add_marker(LatLonMarker(destination[0], destination[1],label='B'))
     dmap.add_path_latlon(46.7623430,23.5575370)
     dmap.add_path_latlon(46.7765820,23.6037750)
     return handlePictureUrl(dmap.generate_url(), polyLine)

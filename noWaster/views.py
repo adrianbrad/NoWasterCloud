@@ -17,7 +17,6 @@ from django.views import generic
 import ujson, requests
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-import googlemaps
 from datetime import datetime
 from django.db import connection
 
@@ -27,14 +26,21 @@ from location.locationPicture import *
 from facebookMessage.messageHandler import *
 from facebookMessage.sender import *
 from facebookMessage.formulate import *
-
-gmaps = googlemaps.Client(key='AIzaSyD2lAiwG69gKzptts3Z1aFcyoNYnsis7AY')
+import time
 
 users = {}
 
+
 class Test(generic.View):
+
     def get(self, request, *args, **kwargs):
-        return HttpResponse(str(users))
+        origin = "the office cluj"
+        dest = "iulius mall cluj"
+        startT = datetime(2018, 3, 24, 21, 00)
+        directions = getRouteRaw(origin, dest, "transit", departure_time = startT)
+        print directions[0]["legs"][0]["steps"]
+        return HttpResponse(directions[0]["legs"][0]["steps"])
+
 
 class NoWasterView(generic.View):
     def get(self, request, *args, **kwargs):
@@ -52,52 +58,88 @@ class NoWasterView(generic.View):
     def post(self, request, *args, **kwargs):
         incoming_message = ujson.loads(self.request.body.decode('utf-8'))
         # print (incoming_message["entry"][0]["messaging"][0]["message"]["nlp"]) 
-        handleMessage(incoming_message)
+        # handleMessage(incoming_message)
+        for entry in incoming_message['entry']:
+            for message in entry['messaging']:
+                # Check to make sure the received call is a message call
+                # This might be delivery, optin, postback for other events 
+                msg = getSenderMessage(message) 
+            if msg != None:
+                senderID = message['sender']['id']
+                userDict = returnUserDictIfNotAlreadyResponding(senderID, users)
+                if userDict != None:
+                    postSenderAction("mark_seen", senderID)
+                    postSenderAction("typing_on", senderID)
+                    # userDict["responding"] = True
+                    handleMessage(msg, senderID, userDict)
+                    # print(returnMessageTypeAndContent(msg))
+                    # postSendLocationQuickReply(senderID, "asdf")
         return HttpResponse()
 
-def handleMessage(incoming_message):
-    message = getSenderMessage(incoming_message) 
-    if message != None:
-        senderID = message['sender']['id']
-        messageTypeContent = returnMessageTypeAndContent(message)
-        if messageTypeContent != None:
-            if users.has_key(senderID):
-                stage = users[senderID]["stage"]
+def handleMessage(message, senderID, userDict):
+    messageTypeContent = returnMessageTypeAndContent(message)
+    print(messageTypeContent)
+    if messageTypeContent != None:
+        stage = userDict["stage"]
+        if stage == 0:
+            print("aici")
+            postSendLocationQuickReply(senderID, "Trimite-mi locatia ta")
+            userDict["stage"] += 1
+        elif stage == 1:
+            loc = getGeocodeAndText(messageTypeContent["content"])
+            if loc == None:
+                postSendLocationQuickReply(senderID, "locatia nu e valida, mai incearca o data") 
             else:
-                stage = 0
-                users[senderID] = {}
-                users[senderID]["stage"] = stage
-                users[senderID]["originLoc"] = {}
-                users[senderID]["destLoc"] = {}
-            if stage == 0:
-                postSendLocationQuickReply(senderID, "Trimite-mi locatia ta")
-                stage = 1
-                users[senderID]["stage"] = stage
-            elif stage == 1:
-                loc = getGeocodeAndText(messageTypeContent["content"])
-                if loc == None:
-                    postSendLocationQuickReply(senderID, "locatia nu e valida, mai incearca o data") 
-                else:
-                    users[senderID]["originLoc"] = loc
-                    users[senderID]["stage"] = 2
-                    postSendLocationQuickReply(senderID, "Trimite locatia unde vrei sa ajungi") 
-            elif stage == 2:
-                loc = getGeocodeAndText(messageTypeContent["content"])
-                if loc == None:
-                    postSendLocationQuickReply(senderID, "locatia nu e valida, mai incearca o data") 
-                else:
-                    users[senderID]["destLoc"] = loc
-                    walkingParameters = getWalkingParameters(getRouteRaw(users[senderID]["originLoc"]["geocode"], users[senderID]["destLoc"]["geocode"], "walking"))
+                userDict["originLoc"] = loc
+                userDict["stage"] += 1
+                postSendLocationQuickReply(senderID, "Trimite locatia unde vrei sa ajungi") 
+        elif stage == 2:
+            loc = getGeocodeAndText(messageTypeContent["content"])
+            if loc == None:
+                postSendLocationQuickReply(senderID, "locatia nu e valida, mai incearca o data") 
+            else:
+                userDict["destLoc"] = loc
+                userDict["stage"] += 1
+                postTravelModeButtons(senderID)
+        elif stage == 3:
+            if messageTypeContent["type"] != "quick_reply":
+                postFacebookMessage(senderID, "Apasa pe butoanele astea te rog :))")
+                postTravelModeButtons(senderID)
+            else:
+                print(messageTypeContent["content"] == "transit")
+                if messageTypeContent["content"] == "walking":
+                    walkingParameters = getWalkingParameters(getRouteRaw(userDict["originLoc"]["geocode"], userDict["destLoc"]["geocode"], messageTypeContent["content"]))
                     if walkingParameters != None:
-                        postFacebookMessage(senderID, walkingParameters["distance"] + " " + walkingParameters["duration"])
+
+                        walkingParameters["origin"] = userDict["originLoc"]["text"]
+                        walkingParameters["dest"] = userDict["destLoc"]["text"]
+
                         postFacebookMessage(senderID, str(weatherCondition))
+                        postFacebookMessage(senderID, formulateWalkingRoute(walkingParameters))
                         try:
-                            postFacebookImageFromUrl(senderID, pictureUrlForRoute(users[senderID]["originLoc"]["text"],users[senderID]["destLoc"]["text"], walkingParameters["polyline"]))
+                            postFacebookImageFromUrl(senderID, pictureUrlForRoute(walkingParameters["polyline"], [userDict["originLoc"]["geocode"],userDict["destLoc"]["geocode"]]))
                         except:
-                            print(pictureUrlForRoute(users[senderID]["originLoc"]["text"],users[senderID]["destLoc"]["text"], walkingParameters["polyline"]))
+                            print(pictureUrlForRoute(walkingParameters["polyline"], [userDict["originLoc"]["geocode"],userDict["destLoc"]["geocode"]]))
                         #este o eroare pe librarie de static maps(motionless) cand face quote ar trebui sa face quote(*string*.encode('utf-8))
                         # print ("Error:",e)
-                    else: 
-                        postFacebookMessage(senderID, "Nu prea merge cu locatiile astea")
-                    postFacebookMessage(senderID,"Acum daca vei scrie ceva vei incepe procesul din nou")
-                    users[senderID]["stage"] = 0    
+                elif messageTypeContent["content"] == "transit":
+                    transitParameters = getTransitParameters(getRouteRaw(userDict["originLoc"]["geocode"], userDict["destLoc"]["geocode"], "transit"))
+                    print transitParameters
+                    if transitParameters != None:
+                        postFacebookMessage(senderID, str(transitParameters[1]))
+                        transitParameters[0].append(userDict["destLoc"]["geocode"])
+                        postFacebookImageFromUrl(senderID, pictureUrlForRoute(transitParameters[0][0], transitParameters[0][1:]))
+                else: 
+                    postFacebookMessage(senderID, "Nu prea merge cu locatiile astea")
+                postSendLocationQuickReply(senderID, "Acum daca vrei sa incepi procesul din nou trimite-mi locatia ta")
+                userDict["stage"] = 1
+        else:
+            postFacebookMessage(senderID, "nu stiu de astea :))")
+
+def returnUserDictIfNotAlreadyResponding(senderID, users):
+    if users.has_key(senderID) == False:
+        users[senderID] = {}
+        users[senderID]["stage"] = 0
+        users[senderID]["originLoc"] = {}
+        users[senderID]["destLoc"] = {}
+    return users[senderID]

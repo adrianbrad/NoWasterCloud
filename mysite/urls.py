@@ -19,6 +19,6 @@ from noWaster.views import NoWasterView
 from noWaster.views import Test
 
 urlpatterns = [
-    url(r'^$', NoWasterView.as_view()),
+    url(r'^$', NoWasterView.as_view()), #can we make this async?
     url(r'^test/?$', Test.as_view()) 
 ]
