@@ -37,7 +37,7 @@ def getTransitParameters(directionsRaw):
 
         for step in directionsRaw[0]["legs"][0]["steps"]:
             if step["travel_mode"] == "WALKING":    
-                directionDictsGeoloc.append((step["start_location"]["lat"], step["start_location"]["lng"]))
+                # directionDictsGeoloc.append((step["start_location"]["lat"], step["start_location"]["lng"]))
                 directionsDictSteps.append(
                     {
                         "walking":
@@ -49,21 +49,23 @@ def getTransitParameters(directionsRaw):
                 )
             elif step["travel_mode"] == "TRANSIT":
                 directionDictsGeoloc.append((step["start_location"]["lat"], step["start_location"]["lng"], step["transit_details"]["line"]["vehicle"]["icon"]))
+                directionDictsGeoloc.append((step["transit_details"]["arrival_stop"]["location"]["lat"], step["transit_details"]["arrival_stop"]["location"]["lng"]))
                 directionsDictSteps.append(
                     {
                         "transit":
                         {
                             # "start_location":(step["start_location"]["lat"], step["start_location"]["lng"]),
-                            "instructions":step["html_instructions"],
                             "line_number":step["transit_details"]["line"]["short_name"],
                             "vehicle":step["transit_details"]["line"]["vehicle"]["type"],
                             "stops":step["transit_details"]["num_stops"],
-                            "line_arrival_time":step["transit_details"]["departure_time"]["text"]
+                            "line_arrival_time":step["transit_details"]["departure_time"]["text"],
+                            "departure_station":step["transit_details"]["departure_stop"]["name"],
+                            "arrival_station":step["transit_details"]["arrival_stop"]["name"],
                         }
                     }
                 )
         return (directionDictsGeoloc, directionsDictSteps)
-        
+
     return None
 
 def getGeocodeAndText(inputAsGeocodeOrLocation):

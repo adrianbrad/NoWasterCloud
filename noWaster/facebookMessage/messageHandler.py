@@ -2,7 +2,6 @@
 myPageID = "1489738607768443"
 
 def returnMessageTypeAndContent(message):
-    print (message)
     if "text" in message:
         if "quick_reply" in message:
             return {"type":"quick_reply", "content":message["quick_reply"]["payload"]}

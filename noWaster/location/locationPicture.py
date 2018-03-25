@@ -20,11 +20,16 @@ def pictureUrlForRoute(polyLine, markerList):
         }
     }]
     dmap = DecoratedMap(style=road_styles)
-    for point in markerList:
+    for index, point in enumerate(markerList):
         if(len(point) == 3):
-            dmap.add_marker(LatLonMarker(point[0], point[1],label='A', icon_url = "http:" + str(point[2])))
+            dmap.add_marker(LatLonMarker(point[0], point[1], size = "tiny", icon_url = "http:" + str(point[2])))
         else:
-            dmap.add_marker(LatLonMarker(point[0], point[1],label='A'))
+            if index == len(markerList) - 1:
+                dmap.add_marker(LatLonMarker(point[0], point[1],label='B'))
+            elif index == 0:
+                dmap.add_marker(LatLonMarker(point[0], point[1],label='A'))
+            else:
+                dmap.add_marker(LatLonMarker(point[0], point[1], size = "small"))
     # dmap.add_marker(LatLonMarker(origin[0], origin[1],label='A'))
     # dmap.add_marker(LatLonMarker(destination[0], destination[1],label='B'))
     dmap.add_path_latlon(46.7623430,23.5575370)

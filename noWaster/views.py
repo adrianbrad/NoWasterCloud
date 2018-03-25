@@ -38,8 +38,10 @@ class Test(generic.View):
         dest = "iulius mall cluj"
         startT = datetime(2018, 3, 24, 21, 00)
         directions = getRouteRaw(origin, dest, "transit", departure_time = startT)
-        print directions[0]["legs"][0]["steps"]
-        return HttpResponse(directions[0]["legs"][0]["steps"])
+        # print directions[0]["legs"][0]["steps"]
+        transitParameters = getTransitParameters(getRouteRaw(origin, dest, "transit"))
+        print(pictureUrlForRoute(transitParameters[0][0], transitParameters[0][1:]))
+        return HttpResponse(transitParameters)
 
 
 class NoWasterView(generic.View):
@@ -78,11 +80,11 @@ class NoWasterView(generic.View):
 
 def handleMessage(message, senderID, userDict):
     messageTypeContent = returnMessageTypeAndContent(message)
-    print(messageTypeContent)
+    # print(messageTypeContent)
     if messageTypeContent != None:
         stage = userDict["stage"]
         if stage == 0:
-            print("aici")
+            # print("aici")
             postSendLocationQuickReply(senderID, "Trimite-mi locatia ta")
             userDict["stage"] += 1
         elif stage == 1:
@@ -106,9 +108,9 @@ def handleMessage(message, senderID, userDict):
                 postFacebookMessage(senderID, "Apasa pe butoanele astea te rog :))")
                 postTravelModeButtons(senderID)
             else:
-                print(messageTypeContent["content"] == "transit")
+                # print(messageTypeContent["content"] == "transit")
                 if messageTypeContent["content"] == "walking":
-                    walkingParameters = getWalkingParameters(getRouteRaw(userDict["originLoc"]["geocode"], userDict["destLoc"]["geocode"], messageTypeContent["content"]))
+                    walkingParameters = getWalkingParameters(getRouteRaw(userDict["originLoc"]["geocode"], userDict["destLoc"]["geocode"], "walking"))
                     if walkingParameters != None:
 
                         walkingParameters["origin"] = userDict["originLoc"]["text"]
@@ -124,9 +126,9 @@ def handleMessage(message, senderID, userDict):
                         # print ("Error:",e)
                 elif messageTypeContent["content"] == "transit":
                     transitParameters = getTransitParameters(getRouteRaw(userDict["originLoc"]["geocode"], userDict["destLoc"]["geocode"], "transit"))
-                    print transitParameters
                     if transitParameters != None:
                         postFacebookMessage(senderID, str(transitParameters[1]))
+                        transitParameters[0].insert(1, userDict["originLoc"]["geocode"])
                         transitParameters[0].append(userDict["destLoc"]["geocode"])
                         postFacebookImageFromUrl(senderID, pictureUrlForRoute(transitParameters[0][0], transitParameters[0][1:]))
                 else: 
