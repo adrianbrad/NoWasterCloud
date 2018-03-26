@@ -81,16 +81,17 @@ class NoWasterView(generic.View):
                 senderID = message['sender']['id']
                 theUsr, created = User.objects.get_or_create(id = senderID)
                 userInfo = getUserInfo(senderID)
-                print userInfo
                 change = False
+                print(theUsr.last_name, userInfo["last_name"])
                 if theUsr.first_name != userInfo["first_name"]:
                     theUsr.first_name = userInfo["first_name"]
-                    change =True
+                    change = True
                 if theUsr.last_name != userInfo["last_name"]:
                     theUsr.last_name = userInfo["last_name"]
                     change = True
                 if change:
                     theUsr.save()
+
                 userDict = returnUserDictIfNotAlreadyResponding(senderID, users)
                 if userDict != None:
                     postSenderAction("mark_seen", senderID)
