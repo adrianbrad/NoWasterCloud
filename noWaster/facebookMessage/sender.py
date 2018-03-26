@@ -6,6 +6,10 @@ man_walking = u'\U0001F6B6'
 bus = u'\U0001F68C'
 taxi = u'\U0001F695'
 
+def getUserInfo(fbid):
+    res = "https://graph.facebook.com/v2.6/%s?fields=first_name,last_name&access_token=%s" % (fbid, PAGE_TOKEN) 
+    return requests.get(res).json()
+
 def postFacebookImageFromUrl(fbid,url):
     post_message_url = 'https://graph.facebook.com/v2.6/me/messages?access_token=' + PAGE_TOKEN
     response_msg = ujson.dumps({"recipient":{"id":fbid}, "message":{"attachment":{"type":"image", "payload":{"url":url, "is_reusable":True}}}})

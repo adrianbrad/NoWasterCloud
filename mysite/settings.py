@@ -109,13 +109,13 @@ if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine'):
     # Running on production App Engine, so connect to Google Cloud SQL using
     # the unix socket at /cloudsql/<your-cloudsql-connection string>
     DATABASES = {
-        # 'default': {
-        #     'ENGINE': 'django.db.backends.mysql',
-        #     'HOST': '/cloudsql/nowaster-197916:europe-west3:nowaster-instance',
-        #     'NAME': 'NoWasterDB',
-        #     'USER': 'mysql',
-        #     'PASSWORD': 'mysql',
-        # }
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'HOST': '/cloudsql/nowaster-197916:europe-west3:nowaster-instance',
+            'NAME': 'NoWasterDB',
+            'USER': 'mysql',
+            'PASSWORD': 'mysql',
+        }
     }
 else:
     # Running locally so connect to either a local MySQL instance or connect to
@@ -125,13 +125,13 @@ else:
     #
     # See https://cloud.google.com/sql/docs/mysql-connect-proxy
     DATABASES = {
-        # 'default': {
-        #     'ENGINE': 'django.db.backends.mysql',
-        #     'HOST': '127.0.0.1',
-        #     'NAME': 'NoWasterDB',
-        #     'USER': 'mysql',
-        #     'PASSWORD': 'mysql',        
-        # }
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'HOST': '127.0.0.1',
+            'NAME': 'NoWasterDB',
+            'USER': 'mysql',
+            'PASSWORD': 'mysql',        
+        }
     }
 # [END db_setup]
 

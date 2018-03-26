@@ -14,8 +14,19 @@
 
 from django.db import models
 
-# class User(models.Model):
-#     "firstName" varchar(30),
-#     "lastName" varChar(30)
+class User(models.Model):
+    first_name = models.CharField(max_length = 30)
+    last_name = models.CharField(max_length = 30)
+    id = models.CharField(max_length = 20, db_column='ID', db_index = True, primary_key=True)  # Field name made lowercase.
+    class Meta:
+        db_table = 'user'
+
+class Loc(models.Model):
+    name = models.CharField(max_length=50, blank=True, null=True)
+    address = models.CharField(max_length=100, blank=True, null=True)
+    id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
+
+    class Meta:
+        db_table = 'loc'
 
 

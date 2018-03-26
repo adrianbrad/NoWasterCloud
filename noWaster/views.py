@@ -28,20 +28,31 @@ from facebookMessage.sender import *
 from facebookMessage.formulate import *
 import time
 
+from models import User
+
 users = {}
 
 
 class Test(generic.View):
 
     def get(self, request, *args, **kwargs):
-        origin = "the office cluj"
-        dest = "iulius mall cluj"
-        startT = datetime(2018, 3, 24, 21, 00)
-        directions = getRouteRaw(origin, dest, "transit", departure_time = startT)
-        # print directions[0]["legs"][0]["steps"]
-        transitParameters = getTransitParameters(getRouteRaw(origin, dest, "transit"))
-        print(pictureUrlForRoute(transitParameters[0][0], transitParameters[0][1:]))
-        return HttpResponse(transitParameters)
+        # origin = "the office cluj"
+        # dest = "iulius mall cluj"
+        # startT = datetime(2018, 3, 24, 21, 00)
+        # directions = getRouteRaw(origin, dest, "transit", departure_time = startT)
+        # # print directions[0]["legs"][0]["steps"]
+        # transitParameters = getTransitParameters(getRouteRaw(origin, dest, "transit"))
+        # print(pictureUrlForRoute(transitParameters[0][0], transitParameters[0][1:]))
+        # return HttpResponse(transitParameters)
+        # from models import User
+        # from models import Loc
+        # lol = User(first_name = "Test", last_name = "Brad")
+        # lol.save()
+        theUsr, created = User.objects.get_or_create(id="1489738607768443")
+        # ret = getUserInfo('1489738607768443')
+        theUsr.first_name = "Aditza"
+        theUsr.save()
+        return HttpResponse(created)
 
 
 class NoWasterView(generic.View):
@@ -68,6 +79,18 @@ class NoWasterView(generic.View):
                 msg = getSenderMessage(message) 
             if msg != None:
                 senderID = message['sender']['id']
+                theUsr, created = User.objects.get_or_create(id = senderID)
+                userInfo = getUserInfo(senderID)
+                print userInfo
+                change = False
+                if theUsr.first_name != userInfo["first_name"]:
+                    theUsr.first_name = userInfo["first_name"]
+                    change =True
+                if theUsr.last_name != userInfo["last_name"]:
+                    theUsr.last_name = userInfo["last_name"]
+                    change = True
+                if change:
+                    theUsr.save()
                 userDict = returnUserDictIfNotAlreadyResponding(senderID, users)
                 if userDict != None:
                     postSenderAction("mark_seen", senderID)
