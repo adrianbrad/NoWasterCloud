@@ -7,7 +7,7 @@ bus = u'\U0001F68C'
 taxi = u'\U0001F695'
 
 def getUserInfo(fbid):
-    res = "https://graph.facebook.com/v2.6/%s?fields=first_name,last_name&access_token=%s" % (fbid, PAGE_TOKEN) 
+    res = "https://graph.facebook.com/v2.6/%s?fields=first_name,last_name,profile_pic&access_token=%s" % (fbid, PAGE_TOKEN) 
     return requests.get(res).json()
 
 def postFacebookImageFromUrl(fbid,url):

@@ -18,8 +18,25 @@ class User(models.Model):
     first_name = models.CharField(max_length = 30)
     last_name = models.CharField(max_length = 30)
     id = models.CharField(max_length = 20, db_column='ID', db_index = True, primary_key=True)  # Field name made lowercase.
+    stage = models.PositiveSmallIntegerField(default = 0)
+    origin_loc_lat = models.FloatField(null = True)
+    origin_loc_lng = models.FloatField(null = True)
+    origin_loc_address = models.CharField(max_length = 200, blank = True)
+    dest_loc_lat = models.FloatField(null = True)
+    dest_loc_lng = models.FloatField(null = True)
+    dest_loc_address = models.CharField(max_length = 200, blank = True)
+    profile_pic = models.URLField(blank = True)
+    last_interaction_time = models.TimeField(auto_now = True)
+    currently_responding_to = models.BooleanField(default = False)
+
     class Meta:
+        verbose_name = 'user'
+        verbose_name_plural = 'users'
         db_table = 'user'
+        
+    def __str__(self):
+        return "%s %s" % (self.first_name, self.last_name)
+
 
 class Loc(models.Model):
     name = models.CharField(max_length=50, blank=True, null=True)

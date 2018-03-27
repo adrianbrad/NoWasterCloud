@@ -1,0 +1,2 @@
+./cloud_sql_proxy.exe -instances="nowaster-197916:europe-west3:nowaster-instance"=tcp:3306
+gcloud sql connect nowaster-instance --user=root
