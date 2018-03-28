@@ -43,7 +43,7 @@ def stageThree(messageTypeContent, senderID, usr):
 
     else:
         if messageTypeContent["content"] == "walking":
-            walkingParameters = getWalkingParameters(getRouteRaw((usr.origin_loc_lat, usr.origin_loc_lng), (usr.dest_loc_lat, usr.dest_loc_lng), "walking"))
+            walkingParameters = getWalkingParameters((usr.origin_loc_lat, usr.origin_loc_lng), (usr.dest_loc_lat, usr.dest_loc_lng))
 
             if walkingParameters != None:
 
@@ -58,18 +58,22 @@ def stageThree(messageTypeContent, senderID, usr):
                     print("no picture for: %s" % (pictureUrlForRoute(walkingParameters["polyline"], [(usr.origin_loc_lat, usr.origin_loc_lng),(usr.dest_loc_lat, usr.dest_loc_lng)])))
                 #este o eroare pe librarie de static maps(motionless) cand face quote ar trebui sa face quote(*string*.encode('utf-8))
                 # print ("Error:",e)
+            else: 
+                postFacebookMessage(senderID, "Nu prea merge cu locatiile astea")
 
         elif messageTypeContent["content"] == "transit":
-            transitParameters = getTransitParameters(getRouteRaw((usr.origin_loc_lat, usr.origin_loc_lng), (usr.dest_loc_lat, usr.dest_loc_lng), "transit"))
+            transitParameters = getTransitParameters((usr.origin_loc_lat, usr.origin_loc_lng), (usr.dest_loc_lat, usr.dest_loc_lng))
 
             if transitParameters != None:
                 postFacebookMessage(senderID, str(transitParameters[1]))
                 transitParameters[0].insert(1, (usr.origin_loc_lat, usr.origin_loc_lng))
                 transitParameters[0].append((usr.dest_loc_lat, usr.dest_loc_lng))
-                postFacebookImageFromUrl(senderID, pictureUrlForRoute(transitParameters[0][0], transitParameters[0][1:]))
-
-        else: 
-            postFacebookMessage(senderID, "Nu prea merge cu locatiile astea")
+                try:
+                    postFacebookImageFromUrl(senderID, pictureUrlForRoute(transitParameters[0][0], transitParameters[0][1:]))
+                except:
+                    print("no picture for: %s" % (pictureUrlForRoute(transitParameters[0][0], transitParameters[0][1:])))
+            else: 
+                postFacebookMessage(senderID, "Nu prea merge cu locatiile astea")
 
         postSendLocationQuickReply(senderID, "Acum daca vrei sa incepi procesul din nou trimite-mi locatia ta")
 

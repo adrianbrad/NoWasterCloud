@@ -4,6 +4,17 @@ from datetime import datetime
 gmaps = googlemaps.Client(key='AIzaSyD2lAiwG69gKzptts3Z1aFcyoNYnsis7AY')
 getRouteRaw = gmaps.directions
 
+cluj_bounds = {
+        "northeast" : {
+            "lat" : 46.8098599743,
+            "lng" : 23.6934167259
+        },
+        "southwest" : {
+            "lat" : 46.7327321222,
+            "lng" : 23.4912683136
+        }
+    }
+
 def reverseGeocode(geocode):
     try:
         return gmaps.reverse_geocode(geocode)
@@ -12,25 +23,19 @@ def reverseGeocode(geocode):
 
 def geocodeLocation(locationText):
     if isinstance(locationText, basestring):
-        result = gmaps.geocode(locationText)
+        result = gmaps.geocode(locationText, region = "RO", bounds = cluj_bounds)
         if len (result) > 0:
             return (result[0]["geometry"]["location"]["lat"], result[0]["geometry"]["location"]["lng"])
     return None
 
-# def check
-
-# def getRouteRaw(origin, dest, tavelMode, startTime):
-#     return gmaps.directions(origin,
-#                             dest,
-#                             mode=tavelMode,
-#                             departure_time=startTime)
-
-def getWalkingParameters(directionsRaw):
+def getWalkingParameters(origin, dest):
+    directionsRaw = getRouteRaw(origin, dest, "walking", region = "RO")
     if len(directionsRaw) > 0:
         return {"distance" : directionsRaw[0]['legs'][0]["distance"]["text"], "duration" : directionsRaw[0]["legs"][0]["duration"]["text"], "polyline" : directionsRaw[0]["overview_polyline"]["points"]}
     return None
 
-def getTransitParameters(directionsRaw):
+def getTransitParameters(origin, dest):
+    directionsRaw = getRouteRaw(origin, dest, "transit", region = "RO")
     if len(directionsRaw) > 0:
         directionsDictSteps = []
         directionDictsGeoloc = [directionsRaw[0]["overview_polyline"]["points"]]

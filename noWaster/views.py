@@ -41,7 +41,8 @@ class Test(generic.View):
         origin = "the office cluj"
         dest = "iulius mall cluj"
         startT = datetime(2018, 3, 24, 21, 00)
-        directions = getRouteRaw(origin, dest, "transit", departure_time = startT)
+        from location.locationText import getRouteRaw, geocodeLocation
+        directions = geocodeLocation("olteniei 3 baia mare")
         # # print directions[0]["legs"][0]["steps"]
         # transitParameters = getTransitParameters(getRouteRaw(origin, dest, "transit"))
         # print(pictureUrlForRoute(transitParameters[0][0], transitParameters[0][1:]))
@@ -54,7 +55,7 @@ class Test(generic.View):
         # ret = getUserInfo('1489738607768443')
         # theUsr.first_name = "Aditza"
         # theUsr.save()
-        return HttpResponse(geocodeLocation("Bulevardul 21 Decembrie 1989 nr. 77 Cluj"))
+        return HttpResponse(directions)
 
 
 class NoWasterView(generic.View):
@@ -91,18 +92,19 @@ class NoWasterView(generic.View):
 def handleMessage(message, senderID, usr):
     messageTypeContent = returnMessageTypeAndContent(message)
 
-    if messageTypeContent != None and messageTypeContent["content"] != "Reset":
+    if messageTypeContent != None:
+        print messageTypeContent["content"]
+        if messageTypeContent["content"] == "Reset":
+            usr.delete()
+            postFacebookMessage(senderID, "te am sters din db")
+        else:
         # usr.currently_responding_to = True
         # usr.save()
-        stage = usr.stage
+            stage = usr.stage
 
-        stageFuncionCall[stage](messageTypeContent, senderID, usr)
-        
-        usr.save()
-
-    elif messageTypeContent["content"] == "Reset":
-        postFacebookMessage(senderID, "te am sters din db")
-        usr.delete()
+            stageFuncionCall[stage](messageTypeContent, senderID, usr)
+            
+            usr.save()
 
     else:
         postFacebookMessage(senderID, "nu stiu de astea :))")

@@ -29,7 +29,7 @@ def pictureUrlForRoute(polyLine, markerList):
             elif index == 0:
                 dmap.add_marker(LatLonMarker(point[0], point[1],label='A'))
             else:
-                dmap.add_marker(LatLonMarker(point[0], point[1], size = "small", label=str(index)))
+                dmap.add_marker(LatLonMarker(point[0], point[1], size = "small", label="A"))
     # dmap.add_marker(LatLonMarker(origin[0], origin[1],label='A'))
     # dmap.add_marker(LatLonMarker(destination[0], destination[1],label='B'))
     dmap.add_path_latlon(46.7623430,23.5575370)
