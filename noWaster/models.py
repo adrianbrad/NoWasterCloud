@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from django.db import models
+from datetime import date
 
 class User(models.Model):
     first_name = models.CharField(max_length = 30)
@@ -27,6 +28,7 @@ class User(models.Model):
     dest_loc_address = models.CharField(max_length = 200, blank = True)
     profile_pic = models.URLField(blank = True)
     last_interaction_time = models.TimeField(auto_now = True)
+    last_update_time = models.DateField(default = date.today)
     currently_responding_to = models.BooleanField(default = False)
 
     class Meta:

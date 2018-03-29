@@ -6,10 +6,6 @@ man_walking = u'\U0001F6B6'
 bus = u'\U0001F68C'
 taxi = u'\U0001F695'
 
-def getUserInfo(fbid):
-    res = "https://graph.facebook.com/v2.6/%s?fields=first_name,last_name,profile_pic&access_token=%s" % (fbid, PAGE_TOKEN) 
-    return requests.get(res).json()
-
 def postFacebookImageFromUrl(fbid,url):
     post_message_url = 'https://graph.facebook.com/v2.6/me/messages?access_token=' + PAGE_TOKEN
     response_msg = ujson.dumps({"recipient":{"id":fbid}, "message":{"attachment":{"type":"image", "payload":{"url":url, "is_reusable":True}}}})
@@ -59,7 +55,7 @@ def postTravelModeButtons(fbid):
     )
     status = requests.post(post_message_url, headers={"Content-Type": "application/json"},data=response_msg)
 
-def postTemplateTextButtons(fbid, title, subtitle, buttons):
+def postTemplateTextButtons(fbid, originText, originGeocode, destText, destGeocode):
     post_message_url = 'https://graph.facebook.com/v2.6/me/messages?access_token=' + PAGE_TOKEN
     response_msg = ujson.dumps(
         {
@@ -78,19 +74,24 @@ def postTemplateTextButtons(fbid, title, subtitle, buttons):
                             "elements":
                             [
                                 {
-                                    "title":title,
-                                    "subtitle":subtitle,
+                                    "title":"Alege modul de deplasare",
+                                    "subtitle":"De la %s pana la %s" % (originText, destText),
                                     "buttons":
                                         [
                                             {   
                                                 "type":"postback",
-                                                "title":"One",
-                                                "payload":"UNU"
+                                                "title":"Bus %s" % (bus),
+                                                "payload":"%s %s %s %s transit" %(str(originGeocode[0]), str(originGeocode[1]), str(destGeocode[0]), str(destGeocode[1]))
                                             },
                                             {
                                                 "type":"postback",
-                                                "title":"Two",
-                                                "payload":"Doi"
+                                                "title":"Pe jos %s" % (man_walking),
+                                                "payload":"%s %s %s %s walking" %(str(originGeocode[0]), str(originGeocode[1]), str(destGeocode[0]), str(destGeocode[1]))
+                                            },
+                                            {
+                                                "type":"postback",
+                                                "title":"taxi %s" % (taxi),
+                                                "payload":"%s %s %s %s taxi" %(str(originGeocode[0]), str(originGeocode[1]), str(destGeocode[0]), str(destGeocode[1]))
                                             }
                                         ]
                                 }
@@ -100,7 +101,68 @@ def postTemplateTextButtons(fbid, title, subtitle, buttons):
                 }
         }
     )
+        
+        # {
+        #     "recipient":
+        #     {
+        #         "id":fbid
+        #     },
+        #     "message":
+        #         {
+        #             "attachment":
+        #             {
+        #                 "type":"template",
+        #                 "payload":
+        #                 {
+        #                     "template_type":"generic",
+        #                     "elements":
+        #                     [
+        #                         {
+        #                             "title":"Alege cum vrei sa te deplasezi",
+        #                             "subtitle":"De la %s pana la %s" % (originText, destText) ,
+        #                             "buttons":
+        #                                 [
+        #                                     {   
+        #                                         "type":"postback",
+        #                                         "title":"Bus " + bus,
+        #                                         "payload":
+        #                                             {
+        #                                                 "origin":originGeocode,
+        #                                                 "dest":destGeocode,
+        #                                                 "travel_mode": "transit"
+        #                                             }
+        #                                     },
+        #                                     {
+        #                                         "type":"postback",
+        #                                         "title":"Pe jos " + man_walking,
+        #                                         "payload":
+        #                                             {
+        #                                                 "origin":originGeocode,
+        #                                                 "dest":destGeocode,
+        #                                                 "travel_mode": "walking"
+        #                                             }
+        #                                     },
+        #                                     {
+        #                                         "type":"postback",
+        #                                         "title":"taxi " + taxi,
+        #                                         "payload":
+        #                                         {                                                    
+        #                                             "origin":originGeocode,
+        #                                             "dest":destGeocode,
+        #                                             "travel_mode": "transit"
+        #                                         }
+        #                                     }
+        #                                 ]
+        #                         }
+        #                     ]
+        #                 }
+        #             }
+        #         }
+        # }
+    # )
+    print "is aici"
     status = requests.post(post_message_url, headers={"Content-Type": "application/json"},data=response_msg)
+    print status
 
 def postSenderAction(senderAction, fbid):
     post_message_url = 'https://graph.facebook.com/v2.6/me/messages?access_token=' + PAGE_TOKEN

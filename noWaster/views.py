@@ -16,18 +16,16 @@ from django.http import HttpResponse
 from django.views import generic
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from datetime import datetime
+from datetime import date
 from django.db import connection
 
 import ujson, requests
 from facebookMessage.messageHandler import returnMessageTypeAndContent, getSenderMessage
-from facebookMessage.sender import postSenderAction, getUserInfo, postFacebookMessage
+from facebookMessage.sender import postSenderAction, postFacebookMessage
+from facebookMessage.userInformation import getUserInfo
 from stageManagement import stageZero, stageOne, stageTwo, stageThree
 
 # import time
-
-from models import User
-
 stageFuncionCall = {
     0: stageZero,
     1: stageOne,
@@ -40,9 +38,10 @@ class Test(generic.View):
     def get(self, request, *args, **kwargs):
         origin = "the office cluj"
         dest = "iulius mall cluj"
-        startT = datetime(2018, 3, 24, 21, 00)
-        from location.locationText import getRouteRaw, geocodeLocation
-        directions = geocodeLocation("olteniei 3 baia mare")
+        startT = datetime.date.today()
+        print startT
+        # from location.locationText import getRouteRaw, geocodeLocation
+        # directions = geocodeLocation("olteniei 3 baia mare")
         # # print directions[0]["legs"][0]["steps"]
         # transitParameters = getTransitParameters(getRouteRaw(origin, dest, "transit"))
         # print(pictureUrlForRoute(transitParameters[0][0], transitParameters[0][1:]))
@@ -55,7 +54,7 @@ class Test(generic.View):
         # ret = getUserInfo('1489738607768443')
         # theUsr.first_name = "Aditza"
         # theUsr.save()
-        return HttpResponse(directions)
+        return HttpResponse()
 
 
 class NoWasterView(generic.View):
@@ -80,7 +79,7 @@ class NoWasterView(generic.View):
 
             if msg != None:
                 senderID = message['sender']['id']
-                usr = getUser(senderID)
+                usr = getUserInfo(senderID)
 
                 if usr != False:
                     postSenderAction("mark_seen", senderID)
@@ -91,42 +90,20 @@ class NoWasterView(generic.View):
 
 def handleMessage(message, senderID, usr):
     messageTypeContent = returnMessageTypeAndContent(message)
-
     if messageTypeContent != None:
-        print messageTypeContent["content"]
         if messageTypeContent["content"] == "Reset":
             usr.delete()
             postFacebookMessage(senderID, "te am sters din db")
-        else:
-        # usr.currently_responding_to = True
-        # usr.save()
-            stage = usr.stage
 
-            stageFuncionCall[stage](messageTypeContent, senderID, usr)
+        if messageTypeContent["type"] ==  "travel_postback":
+            stageFuncionCall[3](messageTypeContent, senderID, usr)
+            
+        elif usr.stage != 3:
+
+            stageFuncionCall[usr.stage](messageTypeContent, senderID, usr)
             
             usr.save()
 
     else:
         postFacebookMessage(senderID, "nu stiu de astea :))")
-
-def getUser(senderID):
-    usr, created = User.objects.get_or_create(id = senderID)
-
-    # if usr.currently_responding_to:
-    #     return False
-
-    userInfo = getUserInfo(senderID)
-
-    if usr.first_name != userInfo["first_name"]:
-        usr.first_name = userInfo["first_name"]
-
-    if usr.last_name != userInfo["last_name"]:
-        usr.last_name = userInfo["last_name"]
-    
-    if usr.profile_pic != userInfo["profile_pic"]:
-        usr.profile_pic != userInfo["profile_pic"]
-
-    usr.save()
-
-    return usr
 

@@ -1,2 +1,2 @@
 def formulateWalkingRoute(walkingParameters):
-    return "De la %s pana la %s sunt %s si dureaza %s pe jos" %(walkingParameters["origin"], walkingParameters["dest"], walkingParameters["distance"], walkingParameters["duration"])
+    return "Sunt %s si dureaza %s pe jos" %(walkingParameters["distance"], walkingParameters["duration"])
