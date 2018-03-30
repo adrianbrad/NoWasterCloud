@@ -22,6 +22,7 @@ def getUserInfo(senderID):
             if usr.profile_pic != userInfo.get("profile_pic"):
                 usr.profile_pic = userInfo.get("profile_pic")
         usr.last_update_time = date.today()
-        usr.save()
-        print "updated"
+        
+    usr.currently_responding_to = True
+    usr.save()
     return usr

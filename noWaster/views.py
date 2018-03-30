@@ -23,38 +23,51 @@ import ujson, requests
 from facebookMessage.messageHandler import returnMessageTypeAndContent, getSenderMessage
 from facebookMessage.sender import postSenderAction, postFacebookMessage
 from facebookMessage.userInformation import getUserInfo
-from stageManagement import stageZero, stageOne, stageTwo, stageThree
+from stageManagement import getStarted, stageOne, stageTwo, sendRoute, handleUnexpectedLocation, resolveLocation
 
 # import time
 stageFuncionCall = {
-    0: stageZero,
+    0: getStarted,
     1: stageOne,
     2: stageTwo,
-    3: stageThree
+    3: sendRoute,
+    4: handleUnexpectedLocation,
+    5: resolveLocation
 }
 
 class Test(generic.View):
 
     def get(self, request, *args, **kwargs):
-        origin = "the office cluj"
-        dest = "iulius mall cluj"
-        startT = datetime.date.today()
-        print startT
-        # from location.locationText import getRouteRaw, geocodeLocation
-        # directions = geocodeLocation("olteniei 3 baia mare")
-        # # print directions[0]["legs"][0]["steps"]
-        # transitParameters = getTransitParameters(getRouteRaw(origin, dest, "transit"))
-        # print(pictureUrlForRoute(transitParameters[0][0], transitParameters[0][1:]))
-        # return HttpResponse(transitParameters)
-        # from models import User
-        # from models import Loc
-        # lol = User(first_name = "Test", last_name = "Brad")
-        # lol.save()
-        # theUsr, created = User.objects.get_or_create(id="1489738607768443")
-        # ret = getUserInfo('1489738607768443')
-        # theUsr.first_name = "Aditza"
-        # theUsr.save()
-        return HttpResponse()
+        PAGE_TOKEN = 'EAAUvgZBC11iEBAKsso9GeWBRGIQSqFQed7rwWDZBh3QIVZBtA29jzOLrhWmePZCVzM9pqHaq2BQ4IYiEhalfEOVwvpGJdeI5Aq73VJZBZCEGOq8fEG6tNkrafxGyooYitDswzWiNjdPXokkv4JjG9XrfHQ7GkgtbHWELk0dkx90M7i5bJQ7rN9'
+
+        post_message_url = 'https://graph.facebook.com/v2.6/me/messenger_profile?access_token=' + PAGE_TOKEN
+        response_msg = ujson.dumps({
+        "persistent_menu":[
+            {
+            "locale":"default",
+            "composer_input_disabled":"false",
+            "call_to_actions":[
+                {
+                "title":"Schimba locatia ta",
+                "type":"postback",
+                "payload":"origin"
+                },
+                {
+                "title":"Alege o destinatie noua",
+                "type":"postback",
+                "payload":"dest"
+                },
+                {
+                "title":"Vezi ce localuri ai in jur",
+                "type":"postback",
+                "payload":"nearby"
+                }
+            ]
+            }
+        ]
+        })
+        status = requests.post(post_message_url, headers={"Content-Type": "application/json"},data=response_msg)       
+        return HttpResponse(status)
 
 
 class NoWasterView(generic.View):
@@ -80,29 +93,47 @@ class NoWasterView(generic.View):
             if msg != None:
                 senderID = message['sender']['id']
                 usr = getUserInfo(senderID)
-
+                # if usr != False and usr.currently_responding_to == False:
                 if usr != False:
                     postSenderAction("mark_seen", senderID)
                     postSenderAction("typing_on", senderID)
                     handleMessage(msg, senderID, usr)
-
+                    # postFacebookMessage(senderID, "ok")
         return HttpResponse()
 
 def handleMessage(message, senderID, usr):
     messageTypeContent = returnMessageTypeAndContent(message)
+
     if messageTypeContent != None:
         if messageTypeContent["content"] == "Reset":
             usr.delete()
-            postFacebookMessage(senderID, "te am sters din db")
+            postFacebookMessage(senderID, "te am sters din db")  
 
-        if messageTypeContent["type"] ==  "travel_postback":
+        elif messageTypeContent["type"] ==  "travel_postback":
             stageFuncionCall[3](messageTypeContent, senderID, usr)
-            
-        elif usr.stage != 3:
 
+        elif messageTypeContent["type"] == "location" and (usr.stage != 1 or usr.stage != 2):
+            stageFuncionCall[4](messageTypeContent, senderID, usr)
+        
+        elif messageTypeContent["type"] == "location_setter":
+            stageFuncionCall[5](messageTypeContent, senderID, usr)
+
+        else:
             stageFuncionCall[usr.stage](messageTypeContent, senderID, usr)
+
+        # if messageTypeContent["content"] == "Reset":
+        #     usr.delete()
+        #     postFacebookMessage(senderID, "te am sters din db")
             
-            usr.save()
+        # elif messageTypeContent["type"] == "get_started":
+        #     stageFuncionCall[0](messageTypeContent, senderID, usr)
+        
+        # elif usr.stage != 3:
+
+        #     stageFuncionCall[usr.stage](messageTypeContent, senderID, usr)
+        
+        usr.currently_responding_to = False
+        usr.save()
 
     else:
         postFacebookMessage(senderID, "nu stiu de astea :))")
