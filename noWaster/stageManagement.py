@@ -2,11 +2,11 @@ from location.locationText import getGeocodeAndText, getRouteRaw, getTravelParam
 from facebookMessage.sender import postFacebookMessage, postFacebookImageFromUrl, postSendLocationQuickReply, postTravelModeButtons, postTemplateTextButtons, postAskWhatToDoWithLocation, postAskForLocGetNearbyLocGetRoute, postAskForLocGetNearbyLoc
 from location.locationPicture import pictureUrlForRoute
 from extras.weatherCondition import weatherCondition
+from facebookMessage.formulate import formulateWeather
 
 def getStarted(messageTypeContent, senderID, usr):
     postFacebookMessage(senderID, "Mesaj de intampinare %s %s" % (usr.first_name, usr.last_name))
     setStageOne(senderID, usr)
-    return
 
 def setStageOne(senderID, usr):
     postSendLocationQuickReply(senderID, "Trimite-mi locatia de pornire")
@@ -25,12 +25,12 @@ def stageOne(messageTypeContent, senderID, usr): #sets the origin location
             usr.origin_loc_address = loc["text"]
             usr.origin_loc_lat = loc["geocode"][0]
             usr.origin_loc_lng = loc["geocode"][1]
-
-        if len(usr.dest_loc_address) > 0:
-            postAskForLocGetNearbyLocGetRoute(senderID, "Trimite-mi o noua locatie unde vrei sa ajungi, sau vezi ce localuri sunt imprejur, sau obtine o ruta pentru locatiile curente")
-        else:
-            postAskForLocGetNearbyLoc(senderID, "Trimite-mi o locatie unde vrei sa ajungi, sau vezi ce localuri sunt imprejur")
-        usr.stage = 2
+            postFacebookMessage(senderID, "Ai setat %s ca adresa de pornire" % (usr.origin_loc_address))
+            if len(usr.dest_loc_address) > 0:
+                postAskForLocGetNearbyLocGetRoute(senderID, "Trimite-mi o noua locatie unde vrei sa ajungi, sau vezi ce localuri sunt imprejur, sau obtine o ruta pentru locatiile curente")
+            else:
+                postAskForLocGetNearbyLoc(senderID, "Trimite-mi o locatie unde vrei sa ajungi, sau vezi ce localuri sunt imprejur")
+            usr.stage = 2
     return
 
 def stageTwo(messageTypeContent, senderID, usr):
@@ -44,24 +44,49 @@ def stageTwo(messageTypeContent, senderID, usr):
             usr.dest_loc_address = loc["text"]
             usr.dest_loc_lat = loc["geocode"][0]
             usr.dest_loc_lng = loc["geocode"][1]
-            postTemplateTextButtons(senderID, usr.origin_loc_address, (usr.origin_loc_lat,  usr.origin_loc_lng), usr.dest_loc_address, (usr.dest_loc_lat, usr.dest_loc_lng))
+            postFacebookMessage(senderID, "Ai setat %s ca destinatie" % (usr.dest_loc_address))
+            if len(usr.origin_loc_address) > 0:
+                postAskForLocGetNearbyLocGetRoute(senderID, "Schimba locatia de origine, vezi ce localuri sunt imprejur, sau obtine o ruta pentru locatiile curente")
+            else:
+                postAskForLocGetNearbyLoc(senderID, "Schimba locatia de origine sau vezi ce localuri sunt imprejur")
+
             usr.stage = 3
-
-    if messageTypeContent["type"] == "quick_reply" and messageTypeContent["content"] == "get_route":
-        postTemplateTextButtons(senderID, usr.origin_loc_address, (usr.origin_loc_lat,  usr.origin_loc_lng), usr.dest_loc_address, (usr.dest_loc_lat, usr.dest_loc_lng))
-        usr.stage = 3
-
-    if messageTypeContent["type"] == "quick_reply" and messageTypeContent["content"] == "locations_near":
-        pass
     return
 
-def sendRoute(messageTypeContent, senderID, usr):
+def stageThree(messageTypeContent, senderID, usr):
+    if messageTypeContent["type"] == "location" or messageTypeContent["type"] == "text":
+        loc = getGeocodeAndText(messageTypeContent["content"])
+        if loc != None:
+            usr.origin_loc_address = loc["text"]
+            usr.origin_loc_lat = loc["geocode"][0]
+            usr.origin_loc_lng = loc["geocode"][1]
+            postFacebookMessage(senderID, "Ai setat %s ca adresa de pornire" % (usr.origin_loc_address))
+        if len(usr.dest_loc_address) > 0:
+            postAskForLocGetNearbyLocGetRoute(senderID, "Trimite-mi o noua locatie unde vrei sa ajungi, sau vezi ce localuri sunt imprejur, sau obtine o ruta pentru locatiile curente")
+        else:
+            postAskForLocGetNearbyLoc(senderID, "Trimite-mi o locatie unde vrei sa ajungi, sau vezi ce localuri sunt imprejur")
+        usr.stage = 2
+    
+    elif messageTypeContent["type"] == "quick_reply" and messageTypeContent["content"] == "get_route":
+        postTemplateTextButtons(senderID, usr.origin_loc_address, (usr.origin_loc_lat,  usr.origin_loc_lng), usr.dest_loc_address, (usr.dest_loc_lat, usr.dest_loc_lng))
+        usr.stage = 4
+
+    elif messageTypeContent["type"] == "quick_reply" and messageTypeContent["content"] == "locations_near":
+        pass
+
+def setStageFour(senderID, usr):
+    postTemplateTextButtons(senderID, usr.origin_loc_address, (usr.origin_loc_lat,  usr.origin_loc_lng), usr.dest_loc_address, (usr.dest_loc_lat, usr.dest_loc_lng))
+    usr.stage = 4
+
+def stageFour(messageTypeContent, senderID, usr):
     if messageTypeContent["type"] != "travel_postback":
         postTemplateTextButtons(senderID, usr.origin_loc_address, (usr.origin_loc_lat,  usr.origin_loc_lng), usr.dest_loc_address, (usr.dest_loc_lat, usr.dest_loc_lng))
     else:
+        postFacebookMessage(senderID,formulateWeather())
         travelParameters = getTravelParameters(messageTypeContent["content"]["origin"], messageTypeContent["content"]["dest"], messageTypeContent["content"]["travel_mode"])
+
         if travelParameters.has_key("routePolyline"):
-            postFacebookMessage(senderID, str(weatherCondition))
+            postFacebookMessage(senderID, "De la %s pana la %s ar dura %s" % (usr.origin_loc_address, usr.dest_loc_address, travelParameters["duration"]))
             postFacebookMessage(senderID, travelParameters["routeText"])
             try:
                 postFacebookImageFromUrl(senderID, pictureUrlForRoute(travelParameters["routePolyline"], travelParameters["waypoints"]))

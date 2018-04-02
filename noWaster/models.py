@@ -52,11 +52,43 @@ class User(models.Model):
 
 
 class Loc(models.Model):
-    name = models.CharField(max_length=50, blank=True, null=True)
-    address = models.CharField(max_length=100, blank=True, null=True)
-    id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
+    name = models.CharField(max_length=50, blank=True, default = "")
+    address = models.CharField(max_length=100, blank=True, default = "")
+    id = models.AutoField(db_column='ID', primary_key=True) 
 
     class Meta:
+        verbose_name = 'location'
+        verbose_name_plural = 'locations'
         db_table = 'loc'
+
+    def __str__(self):
+        return "%s" % (self.name)
+
+class Emoji(models.Model):
+    id = models.IntegerField(db_column='ID', primary_key=True)
+    text = models.CharField(max_length = 20, blank = False)
+
+    class Meta:
+        verbose_name = 'emoji'
+        verbose_name_plural = 'emojis'
+        db_table = 'emoji'
+
+    def __str__(self):
+        return "%s" % (self.id)
+
+class WeatherDictionary(models.Model):
+    id = models.IntegerField(db_column='ID', primary_key=True)
+    description = models.CharField(max_length = 50, blank = False)
+    emoji1 = models.ForeignKey(Emoji, null=True, related_name="emoji1")
+    emoji2 = models.ForeignKey(Emoji, null=True, related_name="emoji2")
+
+    class Meta:
+        verbose_name = 'weather'
+        db_table = 'weather'
+
+    def __str__(self):
+        return "%s" % (self.description)
+
+
 
 

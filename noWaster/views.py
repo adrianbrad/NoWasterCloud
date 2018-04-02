@@ -21,53 +21,66 @@ from django.db import connection
 
 import ujson, requests
 from facebookMessage.messageHandler import returnMessageTypeAndContent, getSenderMessage
-from facebookMessage.sender import postSenderAction, postFacebookMessage
+from facebookMessage.sender import postSenderAction, postFacebookMessage, postAskForLocGetNearbyLoc
 from facebookMessage.userInformation import getUserInfo
-from stageManagement import getStarted, stageOne, stageTwo, sendRoute, handleUnexpectedLocation, resolveLocation
+from stageManagement import getStarted, stageOne, stageTwo, stageThree, stageFour, handleUnexpectedLocation, resolveLocation, setStageOne, setStageTwo, setStageFour
 
+from facebookMessage.formulate import formulateWeather
+from location.locationText import getRouteRaw
 # import time
 stageFuncionCall = {
     0: getStarted,
     1: stageOne,
     2: stageTwo,
-    3: sendRoute,
-    4: handleUnexpectedLocation,
-    5: resolveLocation
+    3: stageThree,
+    4: stageFour,
+    5: handleUnexpectedLocation,
+    6: resolveLocation,
+    11: setStageOne,
+    12: setStageTwo,
+    14: formulateWeather,
+    "get_route" : setStageFour
 }
 
 class Test(generic.View):
 
     def get(self, request, *args, **kwargs):
-        PAGE_TOKEN = 'EAAUvgZBC11iEBAKsso9GeWBRGIQSqFQed7rwWDZBh3QIVZBtA29jzOLrhWmePZCVzM9pqHaq2BQ4IYiEhalfEOVwvpGJdeI5Aq73VJZBZCEGOq8fEG6tNkrafxGyooYitDswzWiNjdPXokkv4JjG9XrfHQ7GkgtbHWELk0dkx90M7i5bJQ7rN9'
+        # PAGE_TOKEN = 'EAAUvgZBC11iEBAKsso9GeWBRGIQSqFQed7rwWDZBh3QIVZBtA29jzOLrhWmePZCVzM9pqHaq2BQ4IYiEhalfEOVwvpGJdeI5Aq73VJZBZCEGOq8fEG6tNkrafxGyooYitDswzWiNjdPXokkv4JjG9XrfHQ7GkgtbHWELk0dkx90M7i5bJQ7rN9'
 
-        post_message_url = 'https://graph.facebook.com/v2.6/me/messenger_profile?access_token=' + PAGE_TOKEN
-        response_msg = ujson.dumps({
-        "persistent_menu":[
-            {
-            "locale":"default",
-            "composer_input_disabled":"false",
-            "call_to_actions":[
-                {
-                "title":"Schimba locatia ta",
-                "type":"postback",
-                "payload":"origin"
-                },
-                {
-                "title":"Alege o destinatie noua",
-                "type":"postback",
-                "payload":"dest"
-                },
-                {
-                "title":"Vezi ce localuri ai in jur",
-                "type":"postback",
-                "payload":"nearby"
-                }
-            ]
-            }
-        ]
-        })
-        status = requests.post(post_message_url, headers={"Content-Type": "application/json"},data=response_msg)       
-        return HttpResponse(status)
+        # post_message_url = 'https://graph.facebook.com/v2.6/me/messenger_profile?access_token=' + PAGE_TOKEN
+        # response_msg = ujson.dumps({
+        # "persistent_menu":[
+        #     {
+        #     "locale":"default",
+        #     "composer_input_disabled":"false",
+        #     "call_to_actions":[
+        #         {
+        #         "title":"Schimba locatia ta",
+        #         "type":"postback",
+        #         "payload":11
+        #         },
+        #         {
+        #         "title":"Alege o destinatie noua",
+        #         "type":"postback",
+        #         "payload":12
+        #         },
+        #         {
+        #         "title":"Vezi ce localuri ai in jur",
+        #         "type":"postback",
+        #         "payload":13
+        #         },
+        #         {
+        #         "title":"Vezi cum e vremea in Cluj",
+        #         "type":"postback",
+        #         "payload":14
+        #         }
+        #     ]
+        #     }
+        # ]
+        # })
+        # status = requests.post(post_message_url, headers={"Content-Type": "application/json"},data=response_msg)
+
+        return HttpResponse()
 
 
 class NoWasterView(generic.View):
@@ -98,43 +111,34 @@ class NoWasterView(generic.View):
                     postSenderAction("mark_seen", senderID)
                     postSenderAction("typing_on", senderID)
                     handleMessage(msg, senderID, usr)
-                    # postFacebookMessage(senderID, "ok")
+                    # postFacebookMessage(senderID, formulateWeather())
         return HttpResponse()
 
 def handleMessage(message, senderID, usr):
     messageTypeContent = returnMessageTypeAndContent(message)
-
     if messageTypeContent != None:
         if messageTypeContent["content"] == "Reset":
             usr.delete()
-            postFacebookMessage(senderID, "te am sters din db")  
+            postFacebookMessage(senderID, "te am sters din db") 
 
-        elif messageTypeContent["type"] ==  "travel_postback":
-            stageFuncionCall[3](messageTypeContent, senderID, usr)
+        elif messageTypeContent["type"] == "menu_but":
+            stageFuncionCall[messageTypeContent["content"]](senderID, usr)
 
-        elif messageTypeContent["type"] == "location" and (usr.stage != 1 or usr.stage != 2):
+        elif messageTypeContent["type"] == "travel_postback":
             stageFuncionCall[4](messageTypeContent, senderID, usr)
-        
-        elif messageTypeContent["type"] == "location_setter":
-            stageFuncionCall[5](messageTypeContent, senderID, usr)
+
+        elif messageTypeContent["type"] == "quick_reply":
+            stageFuncionCall[messageTypeContent["content"]](senderID, usr)
 
         else:
             stageFuncionCall[usr.stage](messageTypeContent, senderID, usr)
-
-        # if messageTypeContent["content"] == "Reset":
-        #     usr.delete()
-        #     postFacebookMessage(senderID, "te am sters din db")
-            
-        # elif messageTypeContent["type"] == "get_started":
-        #     stageFuncionCall[0](messageTypeContent, senderID, usr)
-        
-        # elif usr.stage != 3:
-
-        #     stageFuncionCall[usr.stage](messageTypeContent, senderID, usr)
         
         usr.currently_responding_to = False
         usr.save()
 
     else:
         postFacebookMessage(senderID, "nu stiu de astea :))")
+
+def handleQuickReply(messageTypeContent, senderID, usr):
+    messageTypeContent
 

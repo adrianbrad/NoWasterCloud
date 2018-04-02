@@ -9,6 +9,7 @@ def returnMessageTypeAndContent(message):
                 
             else:
                 return {"type":"quick_reply", "content":message["quick_reply"]["payload"]}
+                
         return {"type":"text", "content":message["text"]}
         
     if "attachments" in message:
@@ -20,11 +21,10 @@ def returnMessageTypeAndContent(message):
             if message["postback"]["payload"] == "GET_STARTED_PAYLOAD":
                 return {"type":"get_started", "content" : ""}
 
-            elif message["postback"]["payload"] == "origin" or message["postback"]["payload"] == "dest" or message["postback"]["payload"] == "nearby":
-                return {"type":"location_setter", "content": message["postback"]["payload"]}
-                
-            return {"type":"travel_postback", "content" :recreateLocationsFromPostback(message["postback"]["payload"])}
-
+            try:
+                return {"type":"menu_but", "content" : int(message["postback"]["payload"])}
+            except:
+                return {"type":"travel_postback", "content" :recreateLocationsFromPostback(message["postback"]["payload"])}              
     return None
 
 def recreateLocationsFromPostback(postbackString):
