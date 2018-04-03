@@ -26,7 +26,8 @@ from facebookMessage.userInformation import getUserInfo
 from stageManagement import getStarted, stageOne, stageTwo, stageThree, stageFour, handleUnexpectedLocation, resolveLocation, setStageOne, setStageTwo, setStageFour
 
 from facebookMessage.formulate import formulateWeather
-from location.locationText import getRouteRaw
+from location.locationText import getRouteRaw,geocodeLocation, gmaps
+from googlemaps import places
 # import time
 stageFuncionCall = {
     0: getStarted,
@@ -79,8 +80,12 @@ class Test(generic.View):
         # ]
         # })
         # status = requests.post(post_message_url, headers={"Content-Type": "application/json"},data=response_msg)
-
-        return HttpResponse()
+        # res = gmaps.places_nearby(location = (46.7684775,23.572416), radius = 2000, type = 'night_club')
+        # print res
+        # for r in res["results"]:
+        #     print r["name"]
+        # return HttpResponse(str(gmaps.places_nearby(location = (46.7684775,23.572416), radius = 2000, type = 'night_club')))
+        return HttpResponse(getRouteRaw( "pasteur 60 cluj","plopilor 81 cluj", mode="driving")[0]["legs"][0]["distance"]["text"])
 
 
 class NoWasterView(generic.View):

@@ -106,7 +106,7 @@ def postTravelModeButtons(fbid):
                     {
                         "content_type":"text",
                         "title":"taxi " + taxi,
-                        "payload":"taxi",
+                        "payload":"driving",
                     }
                 ]
             }
@@ -150,7 +150,7 @@ def postTemplateTextButtons(fbid, originText, originGeocode, destText, destGeoco
                                             {
                                                 "type":"postback",
                                                 "title":"taxi %s" % (taxi),
-                                                "payload":"%s %s %s %s taxi" %(str(originGeocode[0]), str(originGeocode[1]), str(destGeocode[0]), str(destGeocode[1]))
+                                                "payload":"%s %s %s %s driving" %(str(originGeocode[0]), str(originGeocode[1]), str(destGeocode[0]), str(destGeocode[1]))
                                             }
                                         ]
                                 }

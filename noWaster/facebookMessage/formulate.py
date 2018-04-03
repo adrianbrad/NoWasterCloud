@@ -21,3 +21,6 @@ def formulateTransitRoute(transitParameters):
 
             message = message + "%s de la %s la ora %s, ai %s opriri si ajungi la %s la ora %s. " %(param["transit"]["line_number"], param["transit"]["departure_station"], param["transit"]["line_arrival_time"], param["transit"]["stops"], param["transit"]["arrival_station"], param["transit"]["arrival_time"] )
     return message
+
+def formulateTaxiRoute(distance, duration):
+    return "%s %s" %(distance, duration)
