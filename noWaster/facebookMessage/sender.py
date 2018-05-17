@@ -1,23 +1,23 @@
 import requests
 import ujson
 
-PAGE_TOKEN = 'EAAUvgZBC11iEBAKsso9GeWBRGIQSqFQed7rwWDZBh3QIVZBtA29jzOLrhWmePZCVzM9pqHaq2BQ4IYiEhalfEOVwvpGJdeI5Aq73VJZBZCEGOq8fEG6tNkrafxGyooYitDswzWiNjdPXokkv4JjG9XrfHQ7GkgtbHWELk0dkx90M7i5bJQ7rN9'
 man_walking = u'\U0001F6B6'
 bus = u'\U0001F68C'
 taxi = u'\U0001F695'
 
+def sendPostRequestMessage(message):
+    post_message_url = 'https://graph.facebook.com/v2.6/me/messages?access_token=EAAUvgZBC11iEBAKsso9GeWBRGIQSqFQed7rwWDZBh3QIVZBtA29jzOLrhWmePZCVzM9pqHaq2BQ4IYiEhalfEOVwvpGJdeI5Aq73VJZBZCEGOq8fEG6tNkrafxGyooYitDswzWiNjdPXokkv4JjG9XrfHQ7GkgtbHWELk0dkx90M7i5bJQ7rN9'
+    return requests.post(post_message_url, headers={"Content-Type": "application/json"},data=message)
+
 def postFacebookImageFromUrl(fbid,url):
-    post_message_url = 'https://graph.facebook.com/v2.6/me/messages?access_token=' + PAGE_TOKEN
     response_msg = ujson.dumps({"recipient":{"id":fbid}, "message":{"attachment":{"type":"image", "payload":{"url":url, "is_reusable":True}}}})
-    status = requests.post(post_message_url, headers={"Content-Type": "application/json"},data=response_msg)      
+    status = sendPostRequestMessage(response_msg)      
 
 def postFacebookMessage(fbid, message):
-    post_message_url = 'https://graph.facebook.com/v2.6/me/messages?access_token=' + PAGE_TOKEN
     response_msg = ujson.dumps({"recipient":{"id":fbid}, "message":{"text":message}})
-    status = requests.post(post_message_url, headers={"Content-Type": "application/json"},data=response_msg)        
+    status = sendPostRequestMessage(response_msg)           
 
 def postAskForLocGetNearbyLoc(fbid, message):
-    post_message_url = 'https://graph.facebook.com/v2.6/me/messages?access_token=' + PAGE_TOKEN
     response_msg = ujson.dumps(
         {
             "recipient":
@@ -35,16 +35,57 @@ def postAskForLocGetNearbyLoc(fbid, message):
                             {
                                 "content_type":"text",
                                 "title":"Localuri",
-                                "payload":"locations_near",
+                                "payload":"nearby",
                             }
                         ]
                     }
         }
     )
-    status = requests.post(post_message_url, headers={"Content-Type": "application/json"},data=response_msg) 
+    status = sendPostRequestMessage(response_msg)       
+
+def locationOptionsButton(fbid, location):
+    response_msg = ujson.dumps(
+        {
+            "recipient":
+            {
+                "id":fbid
+            },
+            "message":
+                {
+                    "attachment":
+                    {
+                        "type":"template",
+                        "payload":
+                        {
+                            "template_type":"button",
+                            "text":"Ai ales %s" %(location),
+                            "buttons":
+                                [
+                                    {   
+                                        "type":"postback",
+                                        "title":"Ruta",
+                                        "payload":""
+                                    },
+                                    {
+                                        "type":"postback",
+                                        "title":"NoWaster",
+                                        "payload":""
+                                    },
+                                    {
+                                        "type":"postback",
+                                        "title":"Informatii",
+                                        "payload":""
+                                    }
+                                ]
+                        }
+                    }
+                }
+        }
+    )
+    status = sendPostRequestMessage(response_msg)      
+
 
 def postAskForLocGetNearbyLocGetRoute(fbid, message):
-    post_message_url = 'https://graph.facebook.com/v2.6/me/messages?access_token=' + PAGE_TOKEN
     response_msg = ujson.dumps(
         {
             "recipient":
@@ -62,26 +103,50 @@ def postAskForLocGetNearbyLocGetRoute(fbid, message):
                             {
                                 "content_type":"text",
                                 "title":"Localuri",
-                                "payload":"locations_near",
+                                "payload":"nearby"
                             },
                             {
                                 "content_type":"text",
                                 "title":"Ruta",
-                                "payload":"get_route",
+                                "payload":"get_route"
                             }
                         ]
                     }
         }
     )
-    status = requests.post(post_message_url, headers={"Content-Type": "application/json"},data=response_msg)          
+    status = requests.post(post_message_url, headers={"Content-Type": "application/json"},data=response_msg)
+
+
+def dynamicQuickReplyButton(fbid, text, buttonsList):
+    btnForFb = []
+    for button in buttonsList:
+        btnForFb.append({
+            "content_type":"text",
+            "title":button["name"],
+            "payload": "locationBut_" + button["name"]
+        })
+
+    response_msg = ujson.dumps(
+        {
+            "recipient":
+            {
+                "id":fbid
+            },
+            "message":
+            {
+                "text": text,
+                "quick_replies":btnForFb
+            }
+        }
+    )
+    status = sendPostRequestMessage(response_msg)         
+    print status      
 
 def postSendLocationQuickReply(fbid, message):
-    post_message_url = 'https://graph.facebook.com/v2.6/me/messages?access_token=' + PAGE_TOKEN
     response_msg = ujson.dumps({"recipient":{"id":fbid}, "message":{"text":message,"quick_replies":[{"content_type":"location"}]}})
-    status = requests.post(post_message_url, headers={"Content-Type": "application/json"},data=response_msg)  
+    status = sendPostRequestMessage(response_msg)        
 
 def postTravelModeButtons(fbid):
-    post_message_url = 'https://graph.facebook.com/v2.6/me/messages?access_token=' + PAGE_TOKEN
     response_msg = ujson.dumps(
         {
             "recipient":
@@ -112,10 +177,10 @@ def postTravelModeButtons(fbid):
             }
         }
     )
-    status = requests.post(post_message_url, headers={"Content-Type": "application/json"},data=response_msg)
+    status = sendPostRequestMessage(response_msg)      
+
 
 def postTemplateTextButtons(fbid, originText, originGeocode, destText, destGeocode):
-    post_message_url = 'https://graph.facebook.com/v2.6/me/messages?access_token=' + PAGE_TOKEN
     response_msg = ujson.dumps(
         {
             "recipient":
@@ -160,15 +225,13 @@ def postTemplateTextButtons(fbid, originText, originGeocode, destText, destGeoco
                 }
         }
     )
-    status = requests.post(post_message_url, headers={"Content-Type": "application/json"},data=response_msg)
+    status = sendPostRequestMessage(response_msg)      
 
 def postSenderAction(senderAction, fbid):
-    post_message_url = 'https://graph.facebook.com/v2.6/me/messages?access_token=' + PAGE_TOKEN
     response_msg = ujson.dumps({"recipient":{"id":fbid}, "sender_action": senderAction})
-    status = requests.post(post_message_url, headers={"Content-Type": "application/json"},data=response_msg)
+    status = sendPostRequestMessage(response_msg)      
 
 def postAskWhatToDoWithLocation(fbid, message):
-    post_message_url = 'https://graph.facebook.com/v2.6/me/messages?access_token=' + PAGE_TOKEN
     response_msg = ujson.dumps(      
         {
             "recipient":
@@ -199,7 +262,7 @@ def postAskWhatToDoWithLocation(fbid, message):
             }
         }
     )
-    status = requests.post(post_message_url, headers={"Content-Type": "application/json"},data=response_msg)
+    status = sendPostRequestMessage(response_msg)      
 
 # def getRouteButtonAndSetOriginButton(fbid):
 

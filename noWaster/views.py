@@ -23,10 +23,10 @@ import ujson, requests
 from facebookMessage.messageHandler import returnMessageTypeAndContent, getSenderMessage
 from facebookMessage.sender import postSenderAction, postFacebookMessage, postAskForLocGetNearbyLoc
 from facebookMessage.userInformation import getUserInfo
-from stageManagement import getStarted, stageOne, stageTwo, stageThree, stageFour, handleUnexpectedLocation, resolveLocation, setStageOne, setStageTwo, setStageFour
+from stageManagement import getStarted, stageOne, stageTwo, stageThree, stageFour, handleUnexpectedLocation, resolveLocation, setStageOne, setStageTwo, setStageFour, getNearbyLocations
 
 from facebookMessage.formulate import formulateWeather
-from location.locationText import getRouteRaw,geocodeLocation, gmaps
+from location.locationText import getRouteRaw,geocodeLocation, gmaps, getNearbyLocationsList
 from googlemaps import places
 # import time
 stageFuncionCall = {
@@ -40,7 +40,8 @@ stageFuncionCall = {
     11: setStageOne,
     12: setStageTwo,
     14: formulateWeather,
-    "get_route" : setStageFour
+    "get_route" : setStageFour,
+    "nearby" : getNearbyLocations
 }
 
 class Test(generic.View):
@@ -80,12 +81,8 @@ class Test(generic.View):
         # ]
         # })
         # status = requests.post(post_message_url, headers={"Content-Type": "application/json"},data=response_msg)
-        # res = gmaps.places_nearby(location = (46.7684775,23.572416), radius = 2000, type = 'night_club')
-        # print res
-        # for r in res["results"]:
-        #     print r["name"]
-        # return HttpResponse(str(gmaps.places_nearby(location = (46.7684775,23.572416), radius = 2000, type = 'night_club')))
-        return HttpResponse(getRouteRaw( "pasteur 60 cluj","plopilor 81 cluj", mode="driving")[0]["legs"][0]["distance"]["text"])
+        return HttpResponse(str(gmaps.places_nearby(location = (46.7762676, 23.6041168), rank_by = "distance", type = 'night_club')))
+        # return HttpResponse(getRouteRaw( "pasteur 60 cluj","plopilor 81 cluj", mode="driving")[0]["legs"][0]["distance"]["text"])
 
 
 class NoWasterView(generic.View):
@@ -113,14 +110,18 @@ class NoWasterView(generic.View):
                 usr = getUserInfo(senderID)
                 # if usr != False and usr.currently_responding_to == False:
                 if usr != False:
-                    postSenderAction("mark_seen", senderID)
-                    postSenderAction("typing_on", senderID)
-                    handleMessage(msg, senderID, usr)
-                    # postFacebookMessage(senderID, formulateWeather())
+                    try:
+                        postSenderAction("mark_seen", senderID)
+                        postSenderAction("typing_on", senderID)
+                        handleMessage(msg, senderID, usr)
+                    except Exception as e:
+                        postFacebookMessage(senderID, "cv eroare")
+                    #     print e.message, e.args
         return HttpResponse()
 
 def handleMessage(message, senderID, usr):
     messageTypeContent = returnMessageTypeAndContent(message)
+    print messageTypeContent
     if messageTypeContent != None:
         if messageTypeContent["content"] == "Reset":
             usr.delete()

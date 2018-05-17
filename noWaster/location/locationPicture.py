@@ -29,9 +29,18 @@ def pictureUrlForRoute(polyLine, markerList):
             elif index == 0:
                 dmap.add_marker(LatLonMarker(point[0], point[1],label='A'))
             else:
-                dmap.add_marker(LatLonMarker(point[0], point[1], size = "small", label="A"))
+                dmap.add_marker(LatLonMarker(point[0], point[1], size = "small", color="blue"))
     # dmap.add_marker(LatLonMarker(origin[0], origin[1],label='A'))
     # dmap.add_marker(LatLonMarker(destination[0], destination[1],label='B'))
     dmap.add_path_latlon(46.7623430,23.5575370)
     dmap.add_path_latlon(46.7765820,23.6037750)
     return handlePictureUrl(dmap.generate_url(), polyLine)
+
+def locationsPicture(origin, locationList):
+    dmap = DecoratedMap()
+    dmap.add_marker(LatLonMarker(origin[0], origin[1], label='A'))
+    count = 1
+    for location in locationList:
+        dmap.add_marker(LatLonMarker(location["geocode"][0], location["geocode"][1], color="blue", label = str(count)))
+        count += 1
+    return dmap.generate_url()

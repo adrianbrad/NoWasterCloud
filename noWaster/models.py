@@ -54,7 +54,7 @@ class User(models.Model):
 class Loc(models.Model):
     name = models.CharField(max_length=50, blank=True, default = "")
     address = models.CharField(max_length=100, blank=True, default = "")
-    id = models.AutoField(db_column='ID', primary_key=True) 
+    place_id = models.CharField(db_column='ID', primary_key=True, max_length = 255)
 
     class Meta:
         verbose_name = 'location'

@@ -24,3 +24,12 @@ def formulateTransitRoute(transitParameters):
 
 def formulateTaxiRoute(distance, duration):
     return "%s %s" %(distance, duration)
+
+def formulateNearbyLoc(nearbyLocParams):
+    message = ""
+    crtNr = 1
+    for location in nearbyLocParams:
+        message = message + "%i %s\n" % (crtNr, location["name"])
+        crtNr += 1
+    print message
+    return message

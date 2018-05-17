@@ -1,4 +1,3 @@
-from sender import PAGE_TOKEN
 from datetime import date
 from noWaster.models import User
 import requests
@@ -8,7 +7,7 @@ def getUserInfo(senderID):
 
     usr, created = User.objects.get_or_create(id = senderID)
     if created or usr.last_update_time != date.today():
-        res = "https://graph.facebook.com/v2.6/%s?fields=first_name,last_name,profile_pic&access_token=%s" % (senderID, PAGE_TOKEN) 
+        res = "https://graph.facebook.com/v2.6/%s?fields=first_name,last_name,profile_pic&access_token=%s" % (senderID, 'EAAUvgZBC11iEBAKsso9GeWBRGIQSqFQed7rwWDZBh3QIVZBtA29jzOLrhWmePZCVzM9pqHaq2BQ4IYiEhalfEOVwvpGJdeI5Aq73VJZBZCEGOq8fEG6tNkrafxGyooYitDswzWiNjdPXokkv4JjG9XrfHQ7GkgtbHWELk0dkx90M7i5bJQ7rN9') 
         userInfo = requests.get(res).json()
 
         if userInfo.get("first_name") != None:

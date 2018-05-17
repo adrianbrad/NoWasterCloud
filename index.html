@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="assets//stylesheets//normalize.css">
+	<link rel="stylesheet" href="assets//stylesheets//main.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<title>PriorityMatrix</title>
+</head>
+<body>
+	<div class ="row topbarfixed">
+		<span id = "title" class = "col-lg-4">
+			Priority Matrix
+		</span>
+		<span id = "stats" class = "col-lg-4">
+			0 COMPLETED TODAY &#183; 0 COMPLETED YESTERDAY &#183; 0 OVERALL COMPLETED
+		</span>
+		<span id = "user" class = "col-lg-4">
+			ANA PALIHOVICI<i class = "fa fa-print"></i><i class = "fa fa-cog">   </i>
+		</span>
+	</div>
+	<div class = "content container-fluid">
+		<div class = "row">
+			<div class = "taskbox col-lg-5" id = "dofirst">
+				<div class = "boxtitle">Do first</div>
+				<div class = "boxsubtitle">Urgent & important</div>
+				<div><input id="doFirstInput" class = "taskinput" placeholder="Create new task..."></input></div>
+			</div>
+			<div class = "taskbox col-lg-5" id = "schedule">
+				<div class = "boxtitle">Schedule</div>
+				<div class = "boxsubtitle">Less urgent, but important</div>
+				<div><input class = "taskinput" placeholder="Create new task..."></input></div>
+			</div>
+		</div>
+		<div class = "row">
+			<div class = "taskbox col-lg-5" id = "delegate">
+				<div class = "boxtitle">Delegate</div>
+				<div class = "boxsubtitle">Urgent, but less important</div>
+				<div><input class = "taskinput" placeholder="Create new task..."></input></div>
+			</div>
+			<div class = "taskbox col-lg-5" id = "dontdo">
+				<div class = "boxtitle">Don't do</div>
+				<div class = "boxsubtitle">Neither urgent nor important</div>
+				<div><input class = "taskinput" placeholder="Create new task..."></input></div>
+			</div>
+		</div>
+
+	</div>
+
+	<script type="text/javascript" src="assets/script/api.js"></script>
+	<script type="text/javascript" src="assets/script/view.js"></script>
+	<script type="text/javascript" src="assets/script/main.js"></script>
+</body>
+
+</html>

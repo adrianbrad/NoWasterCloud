@@ -17,6 +17,7 @@ from django.contrib import admin
 
 from noWaster.views import NoWasterView
 from noWaster.views import Test
+from django.views.generic import TemplateView
 
 urlpatterns = [
     url(r'^$', NoWasterView.as_view()), #can we make this async?

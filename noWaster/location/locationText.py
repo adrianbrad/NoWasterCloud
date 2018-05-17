@@ -77,51 +77,18 @@ def getTravelParameters(origin, dest, travelMode):
             return {"routeText": formulateTaxiRoute(directionsRaw[0]["legs"][0]["distance"]["value"],directionsRaw[0]["legs"][0]["duration"]["value"]), "routePolyline": directionsRaw[0]["overview_polyline"]["points"], "waypoints":[origin, dest], "duration" : directionsRaw[0]["legs"][0]["duration"]["text"]}
     return "nu merge de data asta"
 
-def getWalkingParameters(origin, dest):
-    directionsRaw = getRouteRaw(origin, dest, "walking", region = "RO", language = "RO")
-    if len(directionsRaw) > 0:
-        return {"distance" : directionsRaw[0]['legs'][0]["distance"]["text"], "duration" : directionsRaw[0]["legs"][0]["duration"]["text"], "polyline" : directionsRaw[0]["overview_polyline"]["points"]}
-    return None
-
-def getTransitParameters(origin, dest):
-    directionsRaw = getRouteRaw(origin, dest, "transit", region = "RO")
-    if len(directionsRaw) > 0:
-        directionsDictSteps = []
-        directionDictsGeoloc = [directionsRaw[0]["overview_polyline"]["points"]]
-
-        for step in directionsRaw[0]["legs"][0]["steps"]:
-            if step["travel_mode"] == "WALKING":    
-                # directionDictsGeoloc.append((step["start_location"]["lat"], step["start_location"]["lng"]))
-                directionsDictSteps.append(
-                    {
-                        "walking":
-                        {
-                            # "start_location":(step["start_location"]["lat"], step["start_location"]["lng"]),
-                            "instructions":step["html_instructions"]
-                        }
-                    }
-                )
-            elif step["travel_mode"] == "TRANSIT":
-                directionDictsGeoloc.append((step["start_location"]["lat"], step["start_location"]["lng"], step["transit_details"]["line"]["vehicle"]["icon"]))
-                directionDictsGeoloc.append((step["transit_details"]["arrival_stop"]["location"]["lat"], step["transit_details"]["arrival_stop"]["location"]["lng"]))
-                directionsDictSteps.append(
-                    {
-                        "transit":
-                        {
-                            # "start_location":(step["start_location"]["lat"], step["start_location"]["lng"]),
-                            "line_number":step["transit_details"]["line"]["short_name"],
-                            "vehicle":step["transit_details"]["line"]["vehicle"]["type"],
-                            "stops":step["transit_details"]["num_stops"],
-                            "line_arrival_time":step["transit_details"]["departure_time"]["text"],
-                            "departure_station":step["transit_details"]["departure_stop"]["name"],
-                            "arrival_station":step["transit_details"]["arrival_stop"]["name"],
-                            "arrival_time":step["transit_details"]["arrival_time"]["text"]
-                        }
-                    }
-                )
-        return (directionDictsGeoloc, directionsDictSteps)
-
-    return None
+def getNearbyLocationsList(geocode):
+    res = gmaps.places_nearby(location = geocode, rank_by = "distance", type = 'night_club')
+    locations = []
+    if res.has_key("results"):
+        count = 0
+        for r in res["results"]:
+            if r.has_key("rating"):
+                count += 1
+                locations.append({"name":r["name"], "geocode": (r["geometry"]["location"]["lat"], r["geometry"]["location"]["lng"]), "place_id":r["place_id"]})
+                if count == 9:
+                    break
+    return locations
 
 def getGeocodeAndText(inputAsGeocodeOrLocation):
     geolocationCode = geocodeLocation(inputAsGeocodeOrLocation)

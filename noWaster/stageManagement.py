@@ -1,8 +1,8 @@
-from location.locationText import getGeocodeAndText, getRouteRaw, getTravelParameters
-from facebookMessage.sender import postFacebookMessage, postFacebookImageFromUrl, postSendLocationQuickReply, postTravelModeButtons, postTemplateTextButtons, postAskWhatToDoWithLocation, postAskForLocGetNearbyLocGetRoute, postAskForLocGetNearbyLoc
-from location.locationPicture import pictureUrlForRoute
+from location.locationText import getGeocodeAndText, getRouteRaw, getTravelParameters, getNearbyLocationsList
+from facebookMessage.sender import locationOptionsButton, dynamicQuickReplyButton, postFacebookMessage, postFacebookImageFromUrl, postSendLocationQuickReply, postTravelModeButtons, postTemplateTextButtons, postAskWhatToDoWithLocation, postAskForLocGetNearbyLocGetRoute, postAskForLocGetNearbyLoc
+from location.locationPicture import pictureUrlForRoute, locationsPicture
 from extras.weatherCondition import weatherCondition
-from facebookMessage.formulate import formulateWeather
+from facebookMessage.formulate import formulateWeather, formulateNearbyLoc
 
 def getStarted(messageTypeContent, senderID, usr):
     postFacebookMessage(senderID, "Mesaj de intampinare %s %s" % (usr.first_name, usr.last_name))
@@ -25,6 +25,7 @@ def stageOne(messageTypeContent, senderID, usr): #sets the origin location
             usr.origin_loc_address = loc["text"]
             usr.origin_loc_lat = loc["geocode"][0]
             usr.origin_loc_lng = loc["geocode"][1]
+            print str((usr.origin_loc_lat,usr.origin_loc_lng ))
             postFacebookMessage(senderID, "Ai setat %s ca adresa de pornire" % (usr.origin_loc_address))
             if len(usr.dest_loc_address) > 0:
                 postAskForLocGetNearbyLocGetRoute(senderID, "Trimite-mi o noua locatie unde vrei sa ajungi, sau vezi ce localuri sunt imprejur, sau obtine o ruta pentru locatiile curente")
@@ -98,6 +99,19 @@ def stageFour(messageTypeContent, senderID, usr):
             postFacebookMessage(senderID, "Nu prea merge cu locatiile astea")
 
         setStageOne(senderID, usr)
+    return
+
+def getNearbyLocations(senderID, usr):
+    locationsList = ""
+    if usr.stage == 2:
+        locationsList = getNearbyLocationsList((usr.origin_loc_lat, usr.origin_loc_lng))
+    elif usr.stage == 3:
+        locationsList = getNearbyLocationsList((usr.origin_loc_lat, usr.origin_loc_lng))
+
+    postFacebookMessage(senderID, formulateNearbyLoc(locationsList))
+    postFacebookImageFromUrl(senderID, locationsPicture((usr.origin_loc_lat, usr.origin_loc_lng), locationsList))
+    dynamicQuickReplyButton(senderID, "alege una dintre locatii",locationsList)
+    locationOptionsButton(senderID, "Brad")
     return
 
 def handleUnexpectedLocation(messageTypeContent, senderID, usr):

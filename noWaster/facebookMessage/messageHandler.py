@@ -4,7 +4,7 @@ myPageID = "1489738607768443"
 def returnMessageTypeAndContent(message):
     if "text" in message:
         if "quick_reply" in message:
-            if message["quick_reply"]["payload"] == "origin" or message["quick_reply"]["payload"] == "dest" or message["quick_reply"]["payload"] == "nearby":
+            if message["quick_reply"]["payload"] == "origin" or message["quick_reply"]["payload"] == "dest":
                 return {"type":"location_setter", "content": message["quick_reply"]["payload"]}
                 
             else:
