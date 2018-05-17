@@ -116,7 +116,7 @@ class NoWasterView(generic.View):
                         handleMessage(msg, senderID, usr)
                     except Exception as e:
                         postFacebookMessage(senderID, "cv eroare")
-                    #     print e.message, e.args
+                        print e.message, e.args
         return HttpResponse()
 
 def handleMessage(message, senderID, usr):
